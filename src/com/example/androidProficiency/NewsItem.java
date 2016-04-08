@@ -1,14 +1,11 @@
-package com.example.test;
+package com.example.androidProficiency;
 
-import android.graphics.Bitmap;
-
-public class RowItem {
+public class NewsItem {
 	private String imageHref = "";
 	private String title = "";
 	private String desc = "";
-	private Bitmap imageBitmap = null;
 
-	public RowItem() {}
+	public NewsItem() {}
 
 	public String getTitle() {
 		return title;
@@ -29,14 +26,6 @@ public class RowItem {
 	}
 	public void setImageHref(String imageHref) {
 		this.imageHref = imageHref;
-	}
-	
-	public void setImageBitmap(Bitmap imageBitmap) {
-		this.imageBitmap = imageBitmap;
-	}
-	
-	public Bitmap getImageBitmap() {
-		return imageBitmap;
 	}
 
 }

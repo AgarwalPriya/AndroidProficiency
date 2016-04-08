@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example.androidProficiency;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -39,22 +39,20 @@ import android.widget.Toast;
  * @author Priyanka
  *
  */
-public class JsonListActivity extends Activity {
+public class NewsListActivity extends Activity {
 	private ListView listView = null;
 	private SwipeRefreshLayout mSwipeRefreshLayout;
-	private JsonListAdapter listAdapter = null;
+	private NewsListAdapter listAdapter = null;
 
-
-
-	private ArrayList<RowItem> feedList;
+	private ArrayList<NewsItem> feedList;
 	FileInputStream stream;
 	String jsonStr = null;
 	JSONObject jsonObj = null;
-	public JsonItem mJsonItem;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		setContentView(R.layout.activity_list);
 		listView = (ListView) findViewById(R.id.list_view);
 		mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipetorefresh);
 		new DownloadJsonTask().execute("https://dl.dropboxusercontent.com/u/746330/facts.json");
@@ -62,9 +60,8 @@ public class JsonListActivity extends Activity {
 
 			@Override
 			public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-				RowItem feedData = (RowItem) listView.getItemAtPosition(position);
 				int pos = position + 1;
-				Toast.makeText(JsonListActivity.this, "Selected :" + " " + pos, Toast.LENGTH_LONG).show();
+				Toast.makeText(NewsListActivity.this, "Selected :" + " " + pos, Toast.LENGTH_LONG).show();
 			}
 		});
 
@@ -110,19 +107,19 @@ public class JsonListActivity extends Activity {
 		}, 2000);
 	}
 
-	private class DownloadJsonTask extends AsyncTask<String, Integer, JsonItem> {
+	private class DownloadJsonTask extends AsyncTask<String, Integer, News> {
 
 		@Override
 		protected void onProgressUpdate(Integer... values) {
 		}
 
 		@Override
-		protected void onPostExecute(JsonItem result) {
+		protected void onPostExecute(News result) {
 			super.onPostExecute(result);
-			if (result != null && result.getRows().size() == 0){
+			if (result == null || result.getRows().size() == 0){
 				Toast.makeText(getApplicationContext(), "No data fetched", Toast.LENGTH_LONG).show();
 			} else {
-				listAdapter = new JsonListAdapter(JsonListActivity.this, result.getRows());   
+				listAdapter = new NewsListAdapter(NewsListActivity.this, result.getRows());   
 				listView.setAdapter(listAdapter);
 				//Set title of action bar with the title as parsed in JSON
 				getActionBar().setTitle(result.getTitle());
@@ -135,14 +132,15 @@ public class JsonListActivity extends Activity {
 		}
 
 		@Override
-		protected JsonItem doInBackground(String... params) {
+		protected News doInBackground(String... params) {
 			String url = params[0];
 			// getting JSON string from URL
 			jsonObj = getJSONFromUrl(url);
 			//parsing json data
 			if (jsonObj != null)
-				mJsonItem = parseJson(jsonObj);
-			return mJsonItem;
+				return parseJson(jsonObj);
+			else 
+				return null;
 		}
 	}
 
@@ -161,18 +159,24 @@ public class JsonListActivity extends Activity {
 			HttpPost httpPost = new HttpPost(url);
 
 			HttpResponse httpResponse = httpClient.execute(httpPost);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			is = httpEntity.getContent();
+			//Check if status code is OK to proceed else dispaly error message
+			if (httpResponse.getStatusLine().getStatusCode() == 200) {
+				HttpEntity httpEntity = httpResponse.getEntity();
+				is = httpEntity.getContent();
 
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					is, "iso-8859-1"), 8);
-			StringBuilder sb = new StringBuilder();
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line + "\n");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(
+						is, "iso-8859-1"), 8);
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					sb.append(line + "\n");
+				}
+				is.close();
+				json = sb.toString();
+			} else {
+				Log.e("JSON Parser", "HTTP Response code not OK");
 			}
-			is.close();
-			json = sb.toString();
+
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -190,16 +194,16 @@ public class JsonListActivity extends Activity {
 		return jObj;
 	}
 
-	
+
 	/**
 	 * @param json object which needs to be parsed
 	 * @return parsed JSON Object
 	 */
-	public JsonItem parseJson (JSONObject json) {
+	public News parseJson (JSONObject json) {
 		try {
 			// parsing json object
 			//JsonItem will have title and row
-			JsonItem jsonItem = new JsonItem();
+			News jsonItem = new News();
 
 			jsonItem.setTitle(json.getString("title"));
 			JSONArray rows = json.getJSONArray("rows");
@@ -208,12 +212,10 @@ public class JsonListActivity extends Activity {
 			for (int i = 0; i < rows.length(); i++) {
 				JSONObject post = (JSONObject) rows.getJSONObject(i);
 				//Saving the data in the RowItem object
-				RowItem item = new RowItem();
+				NewsItem item = new NewsItem();
 				item.setTitle(post.getString("title"));
 				item.setDesc(post.getString("description"));
 				item.setImageHref(post.getString("imageHref"));
-				//Bitmap bmp = downloadBitmap(post.getString("imageHref"));
-				//item.setImageBitmap(bmp);
 				feedList.add(item);
 			} 
 			jsonItem.setRows(feedList);
@@ -223,5 +225,5 @@ public class JsonListActivity extends Activity {
 			return null;
 		}
 	}
-	
+
 }

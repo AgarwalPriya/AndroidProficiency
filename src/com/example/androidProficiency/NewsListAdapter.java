@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example.androidProficiency;
 
 import java.util.ArrayList;
 
@@ -10,17 +10,17 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class JsonListAdapter extends BaseAdapter {
-	private ArrayList<RowItem> listData;
+public class NewsListAdapter extends BaseAdapter {
+	private ArrayList<NewsItem> listData;
 	private LayoutInflater layoutInflater;
-	private LazyImageDownloader imageDownLoader = null;
+	private NewsImageDownloader imageDownLoader = null;
 	private Activity mActivity = null;
 	
-	public JsonListAdapter(Activity activity, ArrayList<RowItem> listData) {
+	public NewsListAdapter(Activity activity, ArrayList<NewsItem> listData) {
 		this.listData = listData;
 		layoutInflater = LayoutInflater.from(activity.getApplicationContext());
 		imageDownLoader = 
-				new LazyImageDownloader(activity.getApplicationContext());
+				new NewsImageDownloader(activity.getApplicationContext());
 		mActivity = activity;
 	}
 
@@ -51,7 +51,7 @@ public class JsonListAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
-		RowItem jsonFeedItem = listData.get(position);
+		NewsItem jsonFeedItem = listData.get(position);
 		
 		if(jsonFeedItem.getTitle().equalsIgnoreCase("null")) {
 			holder.title.setVisibility(View.GONE);
@@ -70,13 +70,9 @@ public class JsonListAdapter extends BaseAdapter {
 		} else {
 			if (holder.imageView != null) {
 				holder.imageView.setVisibility(View.VISIBLE);
-				//new ImageDownloader(holder.imageView).execute(jsonFeedItem.getImageHref());
 				imageDownLoader.displayImage(jsonFeedItem.getImageHref(), mActivity, holder.imageView);
 			}
 		}	
-		if (holder.title.getVisibility() == View.GONE && holder.desc.getVisibility() == View.GONE && holder.imageView.getVisibility() == View.GONE) {
-			convertView.setVisibility(View.GONE);
-		}
 		return convertView;
 	}
 
