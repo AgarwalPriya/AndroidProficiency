@@ -1,6 +1,7 @@
 package com.example.test;
 
 import java.io.InputStream;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -29,10 +30,6 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 
 	@Override
 	protected void onPostExecute(Bitmap bitmap) {
-/*		if (isCancelled()) {
-			bitmap = null;
-		}
-*/
 		if (imageViewReference != null) {
 			ImageView imageView = imageViewReference.get();
 			if (imageView != null) {
@@ -53,11 +50,6 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 			URL uri = new URL(url);
 			urlConnection = (HttpURLConnection) uri.openConnection();
 
-			int statusCode = urlConnection.getResponseCode();
-/*			if (statusCode != HttpStatus.SC_OK) {
-				return null;
-			}
-*/
 			InputStream inputStream = urlConnection.getInputStream();
 			if (inputStream != null) {
 				Bitmap bitmap = BitmapFactory.decodeStream(inputStream);

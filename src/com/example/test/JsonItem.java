@@ -17,7 +17,6 @@ public class JsonItem {
     public void setTitle(String title) {
     	
         this.title = title;
-        Log.e("PRIYANKA","JsonItem - title = "+title);
     }
     
     public ArrayList<RowItem> getRows() {
@@ -25,7 +24,6 @@ public class JsonItem {
     }
     public void setRows(ArrayList<RowItem> rows) {
         this.rows = rows;
-        Log.e("PRIYANKA","JsonItem -rows size = "+rows.size());
     }
 
 }

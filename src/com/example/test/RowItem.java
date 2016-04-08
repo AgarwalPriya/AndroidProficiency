@@ -1,11 +1,12 @@
 package com.example.test;
 
-import android.util.Log;
+import android.graphics.Bitmap;
 
 public class RowItem {
 	private String imageHref = "";
 	private String title = "";
 	private String desc = "";
+	private Bitmap imageBitmap = null;
 
 	public RowItem() {}
 
@@ -28,6 +29,14 @@ public class RowItem {
 	}
 	public void setImageHref(String imageHref) {
 		this.imageHref = imageHref;
+	}
+	
+	public void setImageBitmap(Bitmap imageBitmap) {
+		this.imageBitmap = imageBitmap;
+	}
+	
+	public Bitmap getImageBitmap() {
+		return imageBitmap;
 	}
 
 }

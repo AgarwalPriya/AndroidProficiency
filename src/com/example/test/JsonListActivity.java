@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.http.HttpEntity;
@@ -18,6 +20,8 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,7 +58,7 @@ public class JsonListActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		listView = (ListView) findViewById(R.id.list_view);
 		mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipetorefresh);
-
+		new DownloadJsonTask().execute("https://dl.dropboxusercontent.com/u/746330/facts.json");
 		listView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -76,7 +80,6 @@ public class JsonListActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		new DownloadJsonTask().execute("https://dl.dropboxusercontent.com/u/746330/facts.json");
 		super.onResume();
 	}
 
@@ -117,10 +120,10 @@ public class JsonListActivity extends Activity {
 		@Override
 		protected void onPostExecute(JsonItem result) {
 			super.onPostExecute(result);
-			if (result.getRows().size() == 0){
+			if (result != null && result.getRows().size() == 0){
 				Toast.makeText(getApplicationContext(), "No data fetched", Toast.LENGTH_LONG).show();
 			} else {
-				listAdapter = new JsonListAdapter(getApplicationContext(), result.getRows());   
+				listAdapter = new JsonListAdapter(JsonListActivity.this, result.getRows());   
 				listView.setAdapter(listAdapter);
 				//Set title of action bar with the title as parsed in JSON
 				getActionBar().setTitle(result.getTitle());
@@ -178,7 +181,9 @@ public class JsonListActivity extends Activity {
 		}
 
 		try {
-			jObj = new JSONObject(json);
+			if (json != null) {
+				jObj = new JSONObject(json);
+			}
 		} catch (JSONException e) {
 			Log.e("JSON Parser", "Error parsing data " + e.toString());
 		}
@@ -208,6 +213,8 @@ public class JsonListActivity extends Activity {
 				item.setTitle(post.getString("title"));
 				item.setDesc(post.getString("description"));
 				item.setImageHref(post.getString("imageHref"));
+				//Bitmap bmp = downloadBitmap(post.getString("imageHref"));
+				//item.setImageBitmap(bmp);
 				feedList.add(item);
 			} 
 			jsonItem.setRows(feedList);
@@ -218,4 +225,28 @@ public class JsonListActivity extends Activity {
 		}
 	}
 	
+	
+	private Bitmap downloadBitmap(String url) {
+		HttpURLConnection urlConnection = null;
+		try {
+			URL uri = new URL(url);
+			urlConnection = (HttpURLConnection) uri.openConnection();
+
+			InputStream inputStream = urlConnection.getInputStream();
+			if (inputStream != null) {
+				Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+				return bitmap;
+			}
+		} catch (Exception e) {
+			if(urlConnection != null) {
+				urlConnection.disconnect();
+				Log.w("ImageDownloader", "Error downloading image from " + url);
+			}
+		} finally {
+			if (urlConnection != null) {
+				urlConnection.disconnect();
+			}
+		}
+		return null;
+	}
 }

@@ -1,14 +1,9 @@
 package com.example.test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,10 +14,15 @@ import android.widget.TextView;
 public class JsonListAdapter extends BaseAdapter {
 	private ArrayList<RowItem> listData;
 	private LayoutInflater layoutInflater;
-
-	public JsonListAdapter(Context context, ArrayList<RowItem> listData) {
+	private LazyImageDownloader imageDownLoader = null;
+	private Activity mActivity = null;
+	
+	public JsonListAdapter(Activity activity, ArrayList<RowItem> listData) {
 		this.listData = listData;
-		layoutInflater = LayoutInflater.from(context);
+		layoutInflater = LayoutInflater.from(activity.getApplicationContext());
+		imageDownLoader = 
+				new LazyImageDownloader(activity.getApplicationContext());
+		mActivity = activity;
 	}
 
 	@Override
@@ -71,7 +71,15 @@ public class JsonListAdapter extends BaseAdapter {
 		} else {
 			if (holder.imageView != null) {
 				holder.imageView.setVisibility(View.VISIBLE);
-				new ImageDownloader(holder.imageView).execute(jsonFeedItem.getImageHref());
+				//new ImageDownloader(holder.imageView).execute(jsonFeedItem.getImageHref());
+				imageDownLoader.displayImage(jsonFeedItem.getImageHref(), mActivity, holder.imageView);
+				/*Bitmap bmp = jsonFeedItem.getImageBitmap();
+				if (bmp != null) {
+					holder.imageView.setImageBitmap(bmp);
+				} else {
+					Drawable placeholder = holder.imageView.getContext().getResources().getDrawable(R.drawable.imageholder);
+					holder.imageView.setImageDrawable(placeholder);
+				}*/
 			}
 		}			
 		return convertView;
