@@ -13,6 +13,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.ImageView;
 
 public class NewsImageDownloader {
@@ -81,11 +82,15 @@ public class NewsImageDownloader {
 				return bitmap;
 			} else {
 				// have to download it
-				bitmap = BitmapFactory.decodeStream(openConnection
-						.getInputStream());
-				// save bitmap to cache for later
-				writeFile(bitmap, bitmapFile);
-				return bitmap;
+				if (openConnection != null) {
+					bitmap = BitmapFactory.decodeStream(openConnection.getInputStream());
+					// save bitmap to cache for later
+					writeFile(bitmap, bitmapFile);
+					return bitmap;
+				} else {
+					Log.e("GetBitmap","URLCOnnection not opened");
+					return null;
+				}
 			}
 
 		} catch (Exception ex) {
