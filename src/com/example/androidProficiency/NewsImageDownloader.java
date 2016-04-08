@@ -1,10 +1,12 @@
 package com.example.androidProficiency;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.ref.SoftReference;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -12,6 +14,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.ImageView;
@@ -44,9 +47,29 @@ public class NewsImageDownloader {
 	}
 
 	public void displayImage(String url, Activity activity, ImageView imageView) {
-		if (newsImageMap.containsKey(url))
-			imageView.setImageBitmap(newsImageMap.get(url).get());
-		else {
+		if (newsImageMap.containsKey(url)) {
+			Bitmap bmp = newsImageMap.get(url).get();
+			if(bmp != null) {
+				imageView.setImageBitmap(bmp);
+				float density = activity.getApplicationContext().getResources().getDisplayMetrics().density;
+				Log.e("PRIYANKA","density ="+density);
+				Log.e("PRIYANKA","bmp.getHeight() ="+bmp.getHeight());
+				Log.e("PRIYANKA","bmp.getWidth() ="+bmp.getWidth());
+				
+				int modifiedHT = (int) (bmp.getHeight()*density);
+				int modifiedWidth = (int) (bmp.getWidth()*density);
+				
+				if(modifiedHT > 400 || modifiedWidth > 400 ){
+					modifiedHT = 350;
+					modifiedWidth = 350;
+				}
+				
+				imageView.getLayoutParams().height = (int) modifiedHT;
+				imageView.getLayoutParams().width = (int) modifiedWidth;
+			
+				
+			}
+		} else {
 			queueImage(url, imageView);
 			imageView.setImageResource(R.drawable.imageholder);
 		}
@@ -71,49 +94,80 @@ public class NewsImageDownloader {
 	private Bitmap getBitmap(String url) {
 
 		try {
-			URLConnection openConnection = new URL(url).openConnection();
+			Log.e("PRI","url ="+url);
 
 			String filename = String.valueOf(url.hashCode());
-
+			Log.e("PRI","filename ="+filename);
 			File bitmapFile = new File(cacheDirectory, filename);
-			Bitmap bitmap = BitmapFactory.decodeFile(bitmapFile.getPath());
+			Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(bitmapFile));
 			// Is the bitmap in our cache?
 			if (bitmap != null) {
 				return bitmap;
 			} else {
 				// have to download it
-				if (openConnection != null) {
-					bitmap = BitmapFactory.decodeStream(openConnection.getInputStream());
-					// save bitmap to cache for later
-					writeFile(bitmap, bitmapFile);
-					return bitmap;
-				} else {
-					Log.e("GetBitmap","URLCOnnection not opened");
-					return null;
-				}
+				Bitmap bmp = downloadBitmap(url);
+				// save bitmap to cache for later use
+				writeFile(bmp, bitmapFile);
+				return bitmap;
 			}
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			Log.e("EXCEPTION","bitmap not decoded");
 			return null;
 		}
 	}
-
-	private void writeFile(Bitmap bmp, File f) {
-		FileOutputStream out = null;
+	
+	private Bitmap downloadBitmap(String url) {
+		HttpURLConnection urlConnection = null;
 		try {
-			out = new FileOutputStream(f);
-			bmp.compress(Bitmap.CompressFormat.PNG, 80, out);
+			URL uri = new URL(url);
+			urlConnection = (HttpURLConnection) uri.openConnection();
+			urlConnection.connect();
+			InputStream inputStream = urlConnection.getInputStream();
+			if (inputStream != null) {
+				Log.e("PRI","inputStream not null");
+				Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+				inputStream.reset();
+				inputStream.close();
+				if(bitmap != null){
+					Log.e("PRI","bitmap not null");
+				}
+				return bitmap;
+			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			if(urlConnection != null) {
+				urlConnection.disconnect();
+				Log.w("ImageDownloader", "Error downloading image from " + url);
+			}
 		} finally {
-			try {
-				if (out != null)
-					out.close();
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			if (urlConnection != null) {
+				urlConnection.disconnect();
 			}
 		}
+		return null;
+	}
+
+	/**
+	 * Write bitmap associated with a url to cache
+	 */
+	private void writeFile(Bitmap bmp, File file) {
+		Log.e("PRI","writeFile ="+file);
+		FileOutputStream out = null;
+		try {
+			// Create a file at the file path, and open it for writing obtaining the output stream
+			file.createNewFile();
+			out = new FileOutputStream(file);
+			// Write the bitmap to the output stream (and thus the file) in PNG format 
+			bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+			Log.e("Success", "saving image to cache. ");  
+			// Flush and close the output stream  
+			out.flush();       
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.e("Error", "Error when saving image to cache. "+ e);   
+		} 
 	}
 
 	/** Classes required for caching and displaying the images **/
