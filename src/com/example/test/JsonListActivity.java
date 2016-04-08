@@ -36,11 +36,10 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 /**
- * @author medha3
+ * @author Priyanka
  *
  */
 public class JsonListActivity extends Activity {
-	private ArrayList<RowItem> listData = null;
 	private ListView listView = null;
 	private SwipeRefreshLayout mSwipeRefreshLayout;
 	private JsonListAdapter listAdapter = null;
@@ -225,28 +224,4 @@ public class JsonListActivity extends Activity {
 		}
 	}
 	
-	
-	private Bitmap downloadBitmap(String url) {
-		HttpURLConnection urlConnection = null;
-		try {
-			URL uri = new URL(url);
-			urlConnection = (HttpURLConnection) uri.openConnection();
-
-			InputStream inputStream = urlConnection.getInputStream();
-			if (inputStream != null) {
-				Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-				return bitmap;
-			}
-		} catch (Exception e) {
-			if(urlConnection != null) {
-				urlConnection.disconnect();
-				Log.w("ImageDownloader", "Error downloading image from " + url);
-			}
-		} finally {
-			if (urlConnection != null) {
-				urlConnection.disconnect();
-			}
-		}
-		return null;
-	}
 }

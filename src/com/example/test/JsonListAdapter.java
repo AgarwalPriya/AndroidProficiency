@@ -3,7 +3,6 @@ package com.example.test;
 import java.util.ArrayList;
 
 import android.app.Activity;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,15 +72,11 @@ public class JsonListAdapter extends BaseAdapter {
 				holder.imageView.setVisibility(View.VISIBLE);
 				//new ImageDownloader(holder.imageView).execute(jsonFeedItem.getImageHref());
 				imageDownLoader.displayImage(jsonFeedItem.getImageHref(), mActivity, holder.imageView);
-				/*Bitmap bmp = jsonFeedItem.getImageBitmap();
-				if (bmp != null) {
-					holder.imageView.setImageBitmap(bmp);
-				} else {
-					Drawable placeholder = holder.imageView.getContext().getResources().getDrawable(R.drawable.imageholder);
-					holder.imageView.setImageDrawable(placeholder);
-				}*/
 			}
-		}			
+		}	
+		if (holder.title.getVisibility() == View.GONE && holder.desc.getVisibility() == View.GONE && holder.imageView.getVisibility() == View.GONE) {
+			convertView.setVisibility(View.GONE);
+		}
 		return convertView;
 	}
 

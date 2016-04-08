@@ -17,7 +17,6 @@ import android.widget.ImageView;
 
 public class LazyImageDownloader {
 
-
 	private HashMap<String, SoftReference<Bitmap>> imageMap = new HashMap<String, SoftReference<Bitmap>>();
 
 	private File cacheDir;
@@ -26,14 +25,15 @@ public class LazyImageDownloader {
 
 	public LazyImageDownloader(Context context) {
 
-		// Make background thread low priority, to avoid affecting UI performance
-		imageLoaderThread.setPriority(Thread.NORM_PRIORITY-1);
+		// Make background thread low priority, to avoid affecting UI
+		// performance
+		imageLoaderThread.setPriority(Thread.NORM_PRIORITY - 1);
 
 		// Find the dir to save cached images
 		String sdState = Environment.getExternalStorageState();
 		if (sdState.equals(Environment.MEDIA_MOUNTED)) {
-			File sdDir = Environment.getExternalStorageDirectory();		
-			cacheDir = new File(sdDir,"androidproficiency/images");
+			File sdDir = Environment.getExternalStorageDirectory();
+			cacheDir = new File(sdDir, "androidproficiency/images");
 			if (!cacheDir.exists()) {
 				cacheDir.mkdirs();
 			}
@@ -44,7 +44,7 @@ public class LazyImageDownloader {
 	}
 
 	public void displayImage(String url, Activity activity, ImageView imageView) {
-		if(imageMap.containsKey(url))
+		if (imageMap.containsKey(url))
 			imageView.setImageBitmap(imageMap.get(url).get());
 		else {
 			queueImage(url, imageView);
@@ -53,17 +53,17 @@ public class LazyImageDownloader {
 	}
 
 	private void queueImage(String url, ImageView imageView) {
-		// This ImageView might have been used for other images, so we clear 
+		// This ImageView might have been used for other images, so we clear
 		// the queue of old tasks before starting.
 		imageQueue.clean(imageView);
 		ImageRef p = new ImageRef(url, imageView);
 
-		synchronized(imageQueue.imageRefs) {
+		synchronized (imageQueue.imageRefs) {
 			imageQueue.imageRefs.push(p);
 			imageQueue.imageRefs.notifyAll();
 		}
 		// Start thread if it's not started yet
-		if(imageLoaderThread.getState() == Thread.State.NEW) {
+		if (imageLoaderThread.getState() == Thread.State.NEW) {
 			imageLoaderThread.start();
 		}
 	}
@@ -82,7 +82,8 @@ public class LazyImageDownloader {
 				return bitmap;
 			} else {
 				// have to download it
-				bitmap = BitmapFactory.decodeStream(openConnection.getInputStream());
+				bitmap = BitmapFactory.decodeStream(openConnection
+						.getInputStream());
 				// save bitmap to cache for later
 				writeFile(bitmap, bitmapFile);
 				return bitmap;
@@ -102,10 +103,12 @@ public class LazyImageDownloader {
 			bmp.compress(Bitmap.CompressFormat.PNG, 80, out);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		finally { 
-			try { if (out != null ) out.close(); }
-			catch(Exception ex) {} 
+		} finally {
+			try {
+				if (out != null)
+					out.close();
+			} catch (Exception ex) {
+			}
 		}
 	}
 
@@ -121,17 +124,18 @@ public class LazyImageDownloader {
 		}
 	}
 
-	//stores list of images to download
+	// stores list of images to download
 	private class ImageQueue {
 		private Stack<ImageRef> imageRefs = new Stack<ImageRef>();
 
-		//removes all instances of this ImageView
+		// removes all instances of this ImageView
 		public void clean(ImageView view) {
 
-			for(int i = 0 ;i < imageRefs.size();) {
-				if(imageRefs.get(i).imageView == view)
+			for (int i = 0; i < imageRefs.size();) {
+				if (imageRefs.get(i).imageView == view)
 					imageRefs.remove(i);
-				else ++i;
+				else
+					++i;
 			}
 		}
 	}
@@ -140,58 +144,60 @@ public class LazyImageDownloader {
 		@Override
 		public void run() {
 			try {
-				while(true) {
-					// Thread waits until there are images in the 
+				while (true) {
+					// Thread waits until there are images in the
 					// queue to be retrieved
-					if(imageQueue.imageRefs.size() == 0) {
-						synchronized(imageQueue.imageRefs) {
+					if (imageQueue.imageRefs.size() == 0) {
+						synchronized (imageQueue.imageRefs) {
 							imageQueue.imageRefs.wait();
 						}
 					}
 
 					// When we have images to be loaded
-					if(imageQueue.imageRefs.size() != 0) {
+					if (imageQueue.imageRefs.size() != 0) {
 						ImageRef imageToLoad;
 
-						synchronized(imageQueue.imageRefs) {
+						synchronized (imageQueue.imageRefs) {
 							imageToLoad = imageQueue.imageRefs.pop();
 						}
 
 						Bitmap bmp = getBitmap(imageToLoad.url);
-						imageMap.put(imageToLoad.url, new SoftReference<Bitmap>(bmp));
+						imageMap.put(imageToLoad.url,
+								new SoftReference<Bitmap>(bmp));
 						Object tag = imageToLoad.imageView.getTag();
 
-						// Make sure we have the right view - thread safety defender
-						if(tag != null && ((String)tag).equals(imageToLoad.url)) {
-							BitmapDisplayer bmpDisplayer = 
-									new BitmapDisplayer(bmp, imageToLoad.imageView);
+						// Make sure we have the right view - thread safety
+						// defender
+						if (tag != null
+								&& ((String) tag).equals(imageToLoad.url)) {
+							BitmapDisplayer bmpDisplayer = new BitmapDisplayer(
+									bmp, imageToLoad.imageView);
 
-							Activity a = 
-									(Activity)imageToLoad.imageView.getContext();
+							Activity a = (Activity) imageToLoad.imageView.getContext();
 
 							a.runOnUiThread(bmpDisplayer);
 						}
 					}
-
-					if(Thread.interrupted())
+					if (Thread.interrupted())
 						break;
 				}
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
-	//Used to display bitmap in the UI thread
+	// Used to display bitmap in the UI thread
 	private class BitmapDisplayer implements Runnable {
 		Bitmap bitmap;
 		ImageView imageView;
 
 		public BitmapDisplayer(Bitmap b, ImageView i) {
-			bitmap=b;
-			imageView=i;
+			bitmap = b;
+			imageView = i;
 		}
 
 		public void run() {
-			if(bitmap != null)
+			if (bitmap != null)
 				imageView.setImageBitmap(bitmap);
 			else
 				imageView.setImageResource(R.drawable.imageholder);
