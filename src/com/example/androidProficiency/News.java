@@ -1,7 +1,6 @@
 package com.example.androidProficiency;
 
 import java.util.ArrayList;
-
 import android.util.Log;
 
 public class News {
